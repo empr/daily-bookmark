@@ -1,0 +1,51 @@
+<html>
+<head>
+<script>
+
+function findBookmarkBar(node) {
+  for (var i = 0; i < node.children.length; i++) {
+    if (node.children[i].id === "1") {
+      return node.children[i];
+    }
+  }
+  return null;
+}
+
+function findDayFolder(node, folderName) {
+  for (var i = 0; i < node.children.length; i++) {
+    if (node.children[i].title === folderName) {
+      return node.children[i];
+    }
+  }
+  return null;
+}
+
+function makeFolderName() {
+  var t = new Date().toISOString();
+  return t.substr(0, t.indexOf('T'));
+}
+
+function addBookmark(tab, folderName, folder) {
+  if (folder) {
+    chrome.bookmarks.create({parentId: folder.id, title: tab.title, url: tab.url});
+  } else {
+    chrome.bookmarks.create({parentId: "1", title: folderName}, function(newFolder) {
+      chrome.bookmarks.create({parentId: newFolder.id, title: tab.title, url: tab.url});
+    });
+  }
+}
+
+chrome.browserAction.onClicked.addListener(function(tab) {
+  chrome.bookmarks.getTree(function(node) {
+    var bookmarkBar, folderName, folder;
+
+    bookmarkBar = findBookmarkBar(node[0]);
+    folderName = makeFolderName();
+    folder = findDayFolder(bookmarkBar, folderName);
+    addBookmark(tab, folderName, folder);
+  });
+});
+</script>
+</head>
+</html>
+
